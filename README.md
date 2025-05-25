@@ -19,6 +19,7 @@
 - Flask-WTF
 - Pandas
 - Bootstrap 5
+- PyMySQL
 
 ## 安装说明
 
@@ -44,14 +45,12 @@ pip install -r requirements.txt
 创建 `.env` 文件并添加以下配置：
 ```
 SECRET_KEY=your-secret-key
-DATABASE_URL=sqlite:///billing.db
+DATABASE_URL=mysql+pymysql://数据库用户:数据用户密码@数据库地址:数据库端口/数据库
 ```
 
 5. 初始化数据库：
 ```bash
-flask db init
-flask db migrate
-flask db upgrade
+mysql -uroot -pxxxx < doc/database.sql
 ```
 
 6. 运行应用：
@@ -82,7 +81,6 @@ mybilling_flask/
 │   ├── auth.py
 │   ├── ledger.py
 │   ├── transaction.py
-│   └── export.py
 ├── static/            # 静态文件
 ├── templates/         # 模板文件
 └── temp/             # 临时文件目录

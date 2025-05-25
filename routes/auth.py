@@ -7,9 +7,10 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    # 验证登录状态
     if current_user.is_authenticated:
         return redirect(url_for('ledger.index'))
-    
+    # 获取登录表单
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()

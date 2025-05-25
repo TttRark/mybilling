@@ -16,6 +16,12 @@
         <a href="{{ url_for('transaction.create', ledger_id=ledger.id) }}" class="btn btn-primary">
             <i class="bi bi-plus-lg"></i> 新增交易
         </a>
+        <a href="{{ url_for('transaction.export', ledger_id=ledger.id) }}" class="btn btn-success">
+            <i class="bi bi-download"></i> 导出
+        </a>
+        <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="bi bi-upload"></i> 导入
+        </button>
         <a href="{{ url_for('ledger.index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> 返回账本
         </a>
@@ -145,6 +151,31 @@
     </div>
 </nav>
 {% endif %}
+
+<!-- 导入模态框 -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">导入交易记录</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('transaction.import_transactions', ledger_id=ledger.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">选择CSV文件</label>
+                        <input type="file" name="file" class="form-control" accept=".csv" required>
+                        <div class="form-text">请选择包含交易记录的CSV文件</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">导入</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}

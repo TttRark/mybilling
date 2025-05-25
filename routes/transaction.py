@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file
 from flask_login import login_required, current_user
 from models import db, Transaction, Ledger
 from forms.transaction import TransactionForm
 from datetime import datetime
+import csv
+import io
 
 transaction_bp = Blueprint('transaction', __name__)
 
@@ -100,4 +102,90 @@ def delete(id):
     db.session.delete(transaction)
     db.session.commit()
     flash('交易记录已删除', 'success')
-    return redirect(url_for('transaction.index', ledger_id=transaction.ledger_id)) 
+    return redirect(url_for('transaction.index', ledger_id=transaction.ledger_id))
+
+@transaction_bp.route('/<int:ledger_id>/export')
+@login_required
+def export(ledger_id):
+    ledger = Ledger.query.get_or_404(ledger_id)
+    if ledger.user_id != current_user.id:
+        flash('您没有权限访问此账本', 'danger')
+        return redirect(url_for('ledger.index'))
+    
+    # 创建内存文件对象
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # 写入表头
+    writer.writerow(['日期', '类型', '金额', '分类', '描述'])
+    
+    # 写入数据
+    for transaction in ledger.transactions:
+        writer.writerow([
+            transaction.date.strftime('%Y-%m-%d'),
+            '收入' if transaction.transaction_type == 'income' else '支出',
+            transaction.amount,
+            transaction.category,
+            transaction.description or ''
+        ])
+    
+    # 准备下载
+    output.seek(0)
+    return send_file(
+        io.BytesIO(output.getvalue().encode('utf-8-sig')),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=f'{ledger.name}_交易记录_{datetime.now().strftime("%Y%m%d")}.csv'
+    )
+
+@transaction_bp.route('/<int:ledger_id>/import', methods=['POST'])
+@login_required
+def import_transactions(ledger_id):
+    ledger = Ledger.query.get_or_404(ledger_id)
+    if ledger.user_id != current_user.id:
+        flash('您没有权限访问此账本', 'danger')
+        return redirect(url_for('ledger.index'))
+    
+    if 'file' not in request.files:
+        flash('请选择要导入的文件', 'danger')
+        return redirect(url_for('transaction.index', ledger_id=ledger_id))
+    
+    file = request.files['file']
+    if file.filename == '':
+        flash('未选择文件', 'danger')
+        return redirect(url_for('transaction.index', ledger_id=ledger_id))
+    
+    if not file.filename.endswith('.csv'):
+        flash('请上传CSV格式的文件', 'danger')
+        return redirect(url_for('transaction.index', ledger_id=ledger_id))
+    
+    try:
+        # 读取CSV文件
+        content = file.read().decode('utf-8-sig')
+        reader = csv.DictReader(content.splitlines())
+        
+        # 导入数据
+        count = 0
+        for row in reader:
+            try:
+                transaction = Transaction(
+                    ledger_id=ledger_id,
+                    date=datetime.strptime(row['日期'], '%Y-%m-%d'),
+                    transaction_type='income' if row['类型'] == '收入' else 'expense',
+                    amount=float(row['金额']),
+                    category=row['分类'],
+                    description=row['描述'] or None
+                )
+                db.session.add(transaction)
+                count += 1
+            except (ValueError, KeyError) as e:
+                flash(f'导入第 {count + 1} 行数据时出错: {str(e)}', 'danger')
+                continue
+        
+        db.session.commit()
+        flash(f'成功导入 {count} 条交易记录', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'导入失败: {str(e)}', 'danger')
+    
+    return redirect(url_for('transaction.index', ledger_id=ledger_id))

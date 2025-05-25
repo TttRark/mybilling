@@ -29,8 +29,10 @@ class Ledger(db.Model):
 
     @property
     def balance(self):
-        income = self.transactions.filter_by(transaction_type='income').with_entities(db.func.sum(Transaction.amount)).scalar() or 0
-        expense = self.transactions.filter_by(transaction_type='expense').with_entities(db.func.sum(Transaction.amount)).scalar() or 0
+        income = self.transactions.filter_by(transaction_type='income')\
+                     .with_entities(db.func.sum(Transaction.amount)).scalar() or 0
+        expense = self.transactions.filter_by(transaction_type='expense')\
+                      .with_entities(db.func.sum(Transaction.amount)).scalar() or 0
         return income - expense
 
 class Transaction(db.Model):
@@ -38,7 +40,7 @@ class Transaction(db.Model):
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(256))
     category = db.Column(db.String(64))
-    transaction_type = db.Column(db.String(20), nullable=False)  # 'income' or 'expense'
+    transaction_type = db.Column(db.String(20), nullable=False)
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     ledger_id = db.Column(db.Integer, db.ForeignKey('ledger.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow) 
