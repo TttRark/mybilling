@@ -14,8 +14,34 @@ def index(ledger_id):
         flash('您没有权限查看此账本', 'error')
         return redirect(url_for('ledger.index'))
     
-    transactions = Transaction.query.filter_by(ledger_id=ledger_id).order_by(Transaction.date.desc()).all()
-    return render_template('transaction/index.html', transactions=transactions, ledger=ledger)
+    # 获取查询参数
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # 每页显示10条记录
+    transaction_type = request.args.get('type')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    
+    # 构建查询
+    query = Transaction.query.filter_by(ledger_id=ledger_id)
+    
+    # 应用过滤条件
+    if transaction_type:
+        query = query.filter_by(transaction_type=transaction_type)
+    if start_date:
+        query = query.filter(Transaction.date >= datetime.strptime(start_date, '%Y-%m-%d'))
+    if end_date:
+        query = query.filter(Transaction.date <= datetime.strptime(end_date, '%Y-%m-%d'))
+    
+    # 按日期降序排序并分页
+    pagination = query.order_by(Transaction.date.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    transactions = pagination.items
+    
+    return render_template('transaction/index.html', 
+                         transactions=transactions, 
+                         ledger=ledger,
+                         pagination=pagination)
 
 @transaction_bp.route('/ledger/<int:ledger_id>/transactions/create', methods=['GET', 'POST'])
 @login_required
@@ -60,7 +86,7 @@ def edit(id):
         db.session.commit()
         flash('交易记录更新成功！', 'success')
         return redirect(url_for('transaction.index', ledger_id=transaction.ledger_id))
-    return render_template('transaction/edit.html', form=form, transaction=transaction)
+    return render_template('transaction/edit.html', form=form, transaction=transaction, ledger=ledger)
 
 @transaction_bp.route('/transaction/<int:id>/delete', methods=['POST'])
 @login_required

@@ -27,6 +27,12 @@ class Ledger(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     transactions = db.relationship('Transaction', backref='ledger', lazy='dynamic')
 
+    @property
+    def balance(self):
+        income = self.transactions.filter_by(transaction_type='income').with_entities(db.func.sum(Transaction.amount)).scalar() or 0
+        expense = self.transactions.filter_by(transaction_type='expense').with_entities(db.func.sum(Transaction.amount)).scalar() or 0
+        return income - expense
+
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     amount = db.Column(db.Float, nullable=False)

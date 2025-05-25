@@ -1,63 +1,141 @@
 {% extends "base.html" %}
 
-{% block title %}添加交易记录 - {{ ledger.name }}{% endblock %}
+{% block title %}新增交易 - {{ ledger.name }} - 个人记账系统{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">添加交易记录</h4>
-            </div>
-            <div class="card-body">
-                <form method="POST">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg animate__animated animate__fadeIn">
+            <div class="card-body p-5">
+                <h2 class="text-center mb-4">
+                    <i class="bi bi-plus-circle text-primary"></i> 新增交易
+                </h2>
+                <form method="POST" action="{{ url_for('transaction.create', ledger_id=ledger.id) }}">
                     {{ form.hidden_tag() }}
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form.amount.label(class="form-label") }}
-                            {{ form.amount(class="form-control") }}
-                            {% for error in form.amount.errors %}
-                            <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            {{ form.transaction_type.label(class="form-label") }}
-                            {{ form.transaction_type(class="form-select") }}
-                            {% for error in form.transaction_type.errors %}
-                            <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form.category.label(class="form-label") }}
-                            {{ form.category(class="form-control") }}
-                            {% for error in form.category.errors %}
-                            <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            {{ form.date.label(class="form-label") }}
-                            {{ form.date(class="form-control", type="date") }}
-                            {% for error in form.date.errors %}
-                            <div class="text-danger">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                    </div>
+                    
                     <div class="mb-3">
-                        {{ form.description.label(class="form-label") }}
-                        {{ form.description(class="form-control") }}
-                        {% for error in form.description.errors %}
-                        <div class="text-danger">{{ error }}</div>
-                        {% endfor %}
+                        <label class="form-label">
+                            <i class="bi bi-calendar"></i> 日期
+                        </label>
+                        {{ form.date(class="form-control form-control-lg", type="date") }}
+                        {% if form.date.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.date.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ url_for('transaction.index', ledger_id=ledger.id) }}" class="btn btn-secondary">返回</a>
-                        {{ form.submit(class="btn btn-primary") }}
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-arrow-left-right"></i> 交易类型
+                        </label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="transaction_type" id="transaction_type-income" value="income" {% if form.transaction_type.data == 'income' %}checked{% endif %}>
+                            <label class="btn btn-outline-success" for="transaction_type-income">
+                                <i class="bi bi-arrow-down-circle"></i> 收入
+                            </label>
+                            <input type="radio" class="btn-check" name="transaction_type" id="transaction_type-expense" value="expense" {% if form.transaction_type.data == 'expense' %}checked{% endif %}>
+                            <label class="btn btn-outline-danger" for="transaction_type-expense">
+                                <i class="bi bi-arrow-up-circle"></i> 支出
+                            </label>
+                        </div>
+                        {% if form.transaction_type.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.transaction_type.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-currency-yen"></i> 金额
+                        </label>
+                        {{ form.amount(class="form-control form-control-lg", placeholder="请输入金额") }}
+                        {% if form.amount.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.amount.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-tag"></i> 分类
+                        </label>
+                        {{ form.category(class="form-select form-select-lg") }}
+                        {% if form.category.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.category.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-chat-text"></i> 描述
+                        </label>
+                        {{ form.description(class="form-control form-control-lg", placeholder="请输入交易描述（选填）") }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.description.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-lg"></i> 保存
+                        </button>
+                        <a href="{{ url_for('transaction.index', ledger_id=ledger.id) }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-x-lg"></i> 取消
+                        </a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 设置日期默认值为今天
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[type="date"]').value = today;
+
+    // 处理交易类型 radio 按钮的样式
+    const transactionTypeRadios = document.querySelectorAll('input[name="transaction_type"]');
+    transactionTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // 移除所有按钮的选中样式
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // 为选中的按钮添加样式
+            if (this.value === 'income') {
+                document.querySelector('label[for="transaction_type-income"]').classList.add('active');
+            } else {
+                document.querySelector('label[for="transaction_type-expense"]').classList.add('active');
+            }
+        });
+    });
+
+    // 初始化选中状态
+    const selectedType = document.querySelector('input[name="transaction_type"]:checked');
+    if (selectedType) {
+        selectedType.dispatchEvent(new Event('change'));
+    }
+});
+</script>
 {% endblock %} 

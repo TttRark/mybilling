@@ -4,65 +4,73 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>我的账本</h2>
+    <h2 class="mb-0">
+        <i class="bi bi-journal-text text-primary"></i> 我的账本
+    </h2>
     <a href="{{ url_for('ledger.create') }}" class="btn btn-primary">
         <i class="bi bi-plus-lg"></i> 新建账本
     </a>
 </div>
 
-<div class="row">
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
     {% for ledger in ledgers %}
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
+    <div class="col">
+        <div class="card h-100 shadow-sm animate__animated animate__fadeIn">
             <div class="card-body">
-                <h5 class="card-title">{{ ledger.name }}</h5>
-                <p class="card-text text-muted">{{ ledger.description or '暂无描述' }}</p>
-                <p class="card-text">
-                    <small class="text-muted">创建于：{{ ledger.created_at.strftime('%Y-%m-%d') }}</small>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-journal-text text-primary"></i> {{ ledger.name }}
+                    </h5>
+                    <div class="dropdown">
+                        <button class="btn btn-link text-dark p-0" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('ledger.edit', id=ledger.id) }}">
+                                    <i class="bi bi-pencil"></i> 编辑
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="#" 
+                                   onclick="if(confirm('确定要删除这个账本吗？')) {
+                                       const form = document.createElement('form');
+                                       form.method = 'POST';
+                                       form.action = '{{ url_for('ledger.delete', id=ledger.id) }}';
+                                       document.body.appendChild(form);
+                                       form.submit();
+                                   }">
+                                    <i class="bi bi-trash"></i> 删除
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="card-text text-muted">
+                    <i class="bi bi-calendar3"></i> 创建于：{{ ledger.created_at.strftime('%Y-%m-%d') }}
                 </p>
-            </div>
-            <div class="card-footer bg-transparent">
-                <div class="btn-group w-100">
+                <p class="card-text">
+                    <i class="bi bi-info-circle"></i> {{ ledger.description or '暂无描述' }}
+                </p>
+                <div class="d-flex justify-content-between align-items-center mt-3">
                     <a href="{{ url_for('transaction.index', ledger_id=ledger.id) }}" class="btn btn-outline-primary">
-                        <i class="bi bi-list-ul"></i> 查看记录
+                        <i class="bi bi-list-ul"></i> 查看交易
                     </a>
-                    <a href="{{ url_for('ledger.edit', id=ledger.id) }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-pencil"></i> 编辑
-                    </a>
-                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ ledger.id }}">
-                        <i class="bi bi-trash"></i> 删除
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 删除确认模态框 -->
-    <div class="modal fade" id="deleteModal{{ ledger.id }}" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">确认删除</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    确定要删除账本"{{ ledger.name }}"吗？此操作不可恢复。
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <form action="{{ url_for('ledger.delete', id=ledger.id) }}" method="POST" class="d-inline">
-                        <button type="submit" class="btn btn-danger">确认删除</button>
-                    </form>
+                    <span class="badge bg-primary rounded-pill">
+                        <i class="bi bi-currency-yen"></i> {{ (ledger.balance or 0)|round(2) }}
+                    </span>
                 </div>
             </div>
         </div>
     </div>
     {% else %}
     <div class="col-12">
-        <div class="alert alert-info">
-            您还没有创建任何账本，点击右上角的"新建账本"按钮开始使用吧！
+        <div class="text-center py-5">
+            <i class="bi bi-journal-x display-1 text-muted"></i>
+            <h3 class="mt-3 text-muted">暂无账本</h3>
+            <p class="text-muted">点击右上角的"新建账本"按钮开始记账吧！</p>
         </div>
     </div>
     {% endfor %}
 </div>
-{% endblock %} 
+{% endblock %}

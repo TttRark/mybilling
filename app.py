@@ -10,6 +10,8 @@ def create_app():
     # 初始化扩展
     db.init_app(app)
     login_manager = LoginManager()
+    login_manager.login_message = '请先登录。'
+
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
 
@@ -27,10 +29,6 @@ def create_app():
     app.register_blueprint(ledger_bp)
     app.register_blueprint(transaction_bp)
     app.register_blueprint(export_bp)
-
-    # 创建数据库表
-    # with app.app_context():
-    #     db.create_all()
 
     return app
 
